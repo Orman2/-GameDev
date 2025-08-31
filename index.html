@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameDev Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1c20;
+            --bg-light: #25282e;
+            --border-color: #363942;
+            --primary-color: #00aaff;
+            --primary-hover: #0088cc;
+            --text-light: #f0f0f0;
+            --text-medium: #a0a0a0;
+            --danger-color: #e74c3c;
+            --danger-hover: #c0392b;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1, h2 {
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        #sidebar {
+            background-color: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            border-right: 1px solid var(--border-color);
+        }
+
+        #sidebar .logo {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            padding: 0 20px 20px 20px;
+            color: var(--primary-color);
+        }
+
+        #sidebar button {
+            background: none;
+            border: none;
+            color: var(--text-medium);
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s, color 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        #sidebar button:hover {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+        }
+
+        #sidebar button.active {
+            color: var(--text-light);
+            background-color: var(--bg-dark);
+            border-left-color: var(--primary-color);
+        }
+        
+        #content {
+            padding: 30px;
+            overflow-y: auto;
+            background-color: var(--bg-dark);
+        }
+
+        .section { display: none; }
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .game-card h3 { margin: 10px 0 5px; font-weight: 500; color: var(--text-light); }
+        .game-card p { font-size: 0.9em; color: var(--text-medium); flex-grow: 1; margin-bottom: 10px; }
+        .game-card .actions { display: flex; gap: 10px; justify-content: center; margin-top: auto; }
+
+        .form-container {
+            background-color: var(--bg-light);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            max-width: 800px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-medium);
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.2);
+        }
+
+        textarea { resize: vertical; min-height: 80px; }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: var(--border-color); color: var(--text-light); }
+        .btn-secondary:hover { background-color: #4a4e59; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+
+        /* --- Стили для загрузки файлов --- */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .file-input-wrapper:hover { border-color: var(--primary-color); }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-label { color: var(--text-medium); }
+        
+        #image-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            margin-top: 15px;
+            border-radius: 8px;
+            display: none; /* Скрыт по умолчанию */
+        }
+        /* --- Конец стилей для загрузки --- */
+
+        .divider { border: none; border-top: 1px solid var(--border-color); margin: 25px 0; }
+        .chart-title { font-size: 1.2em; font-weight: 500; color: var(--text-light); margin-bottom: 15px; }
+        
+        #notification {
+            position: fixed; bottom: 20px; right: 20px;
+            background-color: var(--primary-color); color: white;
+            padding: 15px 25px; border-radius: 8px;
+            box-shadow: var(--shadow);
+            transform: translateY(200%);
+            transition: transform 0.5s ease-in-out;
+            z-index: 1000;
+        }
+        #notification.show { transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <nav id="sidebar">
+        <div class="logo">🚀 GameDev</div>
+        <button onclick="showSection('home')" class="active">🏠 Главная</button>
+        <button onclick="showSection('mygames')">🎮 Мои игры</button>
+        <button onclick="showSection('earnings')">💰 Заработок</button>
+        <button onclick="showSection('profile')">👤 Профиль</button>
+    </nav>
+
+    <main id="content">
+        <section id="home" class="section active">
+            <h1>Все игры</h1>
+            <div id="games-list" class="games-grid"></div>
+        </section>
+
+        <section id="profile" class="section">
+            <h1>Профиль разработчика</h1>
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="profileName">Имя</label>
+                    <input id="profileName" type="text" placeholder="Ваше имя">
+                </div>
+                <div class="form-group">
+                    <label for="profileSurname">Фамилия</label>
+                    <input id="profileSurname" type="text" placeholder="Ваша фамилия">
+                </div>
+                <div class="form-group">
+                    <label for="profileCompany">Компания</label>
+                    <input id="profileCompany" type="text" placeholder="Название компании">
+                </div>
+                <button class="btn btn-primary" onclick="saveProfile()">Сохранить профиль</button>
+            </div>
+        </section>
+
+        <section id="mygames" class="section">
+            <h1>Мои игры</h1>
+            <div id="mygames-list" class="games-grid"></div>
+            
+            <h2 style="margin-top: 30px;">Добавить / Редактировать игру</h2>
+            <div class="form-container">
+                <input type="hidden" id="gameId">
+                <div class="form-group">
+                    <label for="gameTitle">Название</label>
+                    <input id="gameTitle" type="text" placeholder="Название вашей игры">
+                </div>
+                <div class="form-group">
+                    <label for="gameDesc">Описание</label>
+                    <textarea id="gameDesc" placeholder="Краткое описание"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Обложка игры</label>
+                    <div class="file-input-wrapper">
+                        <span class="file-input-label">Нажмите, чтобы выбрать изображение</span>
+                        <input id="gameImage" type="file" accept="image/*">
+                        <img id="image-preview" src="" alt="Предпросмотр обложки">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="gameFile">Ссылка на файл игры</label>
+                    <input id="gameFile" type="text" placeholder="https://example.com/game.zip">
+                </div>
+
+                <button id="saveGameBtn" class="btn btn-primary" onclick="saveGame()">Сохранить игру</button>
+                <button id="cancelEditBtn" class="btn btn-secondary" onclick="cancelEdit()" style="display: none;">Отмена</button>
+            </div>
+        </section>
+
+        <section id="earnings" class="section">
+            <h1>Заработок</h1>
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="earningsTotal">Общий доход ($)</label>
+                    <input id="earningsTotal" type="number" step="0.01">
+                </div>
+                <button class="btn btn-primary" onclick="updateEarnings()">Обновить доход</button>
+                <hr class="divider">
+                <h2 class="chart-title">История доходов</h2>
+                <canvas id="earningsChart" style="max-height: 350px;"></canvas>
+            </div>
+        </section>
+    </main>
+    
+    <div id="notification"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let state = {
+                games: [],
+                profile: { name: '', surname: '', company: '' },
+                earnings: { total: 120, history: [24.56, 11.21, 9.87, 45.1, 33.8] },
+                editingGameId: null
+            };
+            
+            const notificationEl = document.getElementById('notification');
+            function showNotification(message, isError = false) {
+                notificationEl.textContent = message;
+                notificationEl.style.backgroundColor = isError ? 'var(--danger-color)' : 'var(--primary-color)';
+                notificationEl.classList.add('show');
+                setTimeout(() => {
+                    notificationEl.classList.remove('show');
+                }, 3000);
+            }
+
+            function loadData() {
+                try {
+                    const savedState = localStorage.getItem('gameDevDashboard');
+                    if (savedState) {
+                        state = { ...state, ...JSON.parse(savedState) };
+                    }
+                } catch (e) {
+                    console.error("Failed to parse localStorage data:", e);
+                    showNotification("Не удалось загрузить данные.", true);
+                }
+            }
+
+            function saveData() {
+                try {
+                    localStorage.setItem('gameDevDashboard', JSON.stringify(state));
+                } catch (e) {
+                    console.error(e);
+                    showNotification('Ошибка сохранения: хранилище может быть переполнено!', true);
+                }
+            }
+            
+            const gamesListEl = document.getElementById('games-list');
+            const myGamesListEl = document.getElementById('mygames-list');
+            let earningsChartInstance;
+
+            function renderAll() {
+                renderGames(gamesListEl, state.games, false);
+                renderGames(myGamesListEl, state.games, true);
+                renderEarnings();
+                loadProfile();
+            }
+
+            function createGameCard(game, isMyGame) {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                
+                const defaultImage = 'https://via.placeholder.com/220x140/cccccc/FFFFFF?text=No+Image';
+                
+                let actionsHtml = `<a href="${game.fileLink || '#'}" class="btn btn-primary" download>Скачать</a>`;
+                if (isMyGame) {
+                    actionsHtml = `
+                        <button class="btn btn-secondary" onclick="editGame(${game.id})">⚙️</button>
+                        <a href="${game.fileLink || '#'}" class="btn btn-primary" download>📥</a>
+                        <button class="btn btn-danger" onclick="deleteGame(${game.id})">🗑️</button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <img src="${game.imageData || defaultImage}" alt="${game.title}">
+                    <h3>${game.title}</h3>
+                    <p>${game.desc}</p>
+                    <div class="actions">${actionsHtml}</div>
+                `;
+                return card;
+            }
+            
+            function renderGames(container, gamesData, isMyGame) {
+                container.innerHTML = '';
+                (gamesData || []).forEach(game => {
+                    container.appendChild(createGameCard(game, isMyGame));
+                });
+            }
+
+            function renderEarnings() {
+                const totalEl = document.getElementById('earningsTotal');
+                if (totalEl) totalEl.value = state.earnings.total;
+
+                const ctx = document.getElementById('earningsChart')?.getContext('2d');
+                if (!ctx) return;
+
+                if (earningsChartInstance) earningsChartInstance.destroy();
+
+                const historyLabels = state.earnings.history.map((_, i) => `Месяц ${i + 1}`);
+
+                earningsChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: historyLabels,
+                        datasets: [{
+                            label: 'Доход ($)',
+                            data: state.earnings.history,
+                            borderColor: 'rgb(0, 170, 255)',
+                            backgroundColor: 'rgba(0, 170, 255, 0.2)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgb(0, 170, 255)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Доход ($)',
+                                    color: 'var(--text-medium)'
+                                },
+                                ticks: {
+                                    color: 'var(--text-medium)'
+                                },
+                                grid: {
+                                    color: 'rgba(54, 57, 66, 0.5)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: 'var(--text-medium)'
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'var(--bg-light)',
+                                titleColor: 'var(--primary-color)',
+                                bodyColor: 'var(--text-light)',
+                                borderColor: 'var(--border-color)',
+                                borderWidth: 1,
+                                cornerRadius: 8,
+                            }
+                        }
+                    }
+                });
+            }
+
+            window.showSection = (id) => {
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
+                document.querySelector(`#sidebar button[onclick="showSection('${id}')"]`).classList.add('active');
+                if (id === 'earnings') renderEarnings();
+            }
+            
+            window.saveProfile = () => {
+                state.profile = {
+                    name: document.getElementById('profileName').value,
+                    surname: document.getElementById('profileSurname').value,
+                    company: document.getElementById('profileCompany').value
+                };
+                saveData();
+                showNotification("Профиль успешно сохранён!");
+            };
+            function loadProfile() {
+                document.getElementById('profileName').value = state.profile.name;
+                document.getElementById('profileSurname').value = state.profile.surname;
+                document.getElementById('profileCompany').value = state.profile.company;
+            }
+            
+            const gameForm = {
+                id: document.getElementById('gameId'),
+                title: document.getElementById('gameTitle'),
+                desc: document.getElementById('gameDesc'),
+                imageInput: document.getElementById('gameImage'),
+                fileLinkInput: document.getElementById('gameFile'),
+                imagePreview: document.getElementById('image-preview'),
+                saveBtn: document.getElementById('saveGameBtn'),
+                cancelBtn: document.getElementById('cancelEditBtn')
+            }
+
+            gameForm.imageInput.addEventListener('change', () => {
+                const file = gameForm.imageInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        gameForm.imagePreview.src = e.target.result;
+                        gameForm.imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    if (!file) {
+                        resolve(null);
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            window.saveGame = async () => {
+                gameForm.saveBtn.disabled = true;
+                gameForm.saveBtn.textContent = 'Сохранение...';
+
+                const title = gameForm.title.value;
+                const desc = gameForm.desc.value;
+                const fileLink = gameForm.fileLinkInput.value;
+                
+                if (!title || !fileLink) {
+                    showNotification("Название и ссылка на файл обязательны!", true);
+                    gameForm.saveBtn.disabled = false;
+                    gameForm.saveBtn.textContent = state.editingGameId ? 'Обновить игру' : 'Сохранить игру';
+                    return;
+                }
+
+                const imageFile = gameForm.imageInput.files[0];
+                
+                try {
+                    const imageData = await readFileAsDataURL(imageFile);
+
+                    if (state.editingGameId) {
+                        const game = state.games.find(g => g.id === state.editingGameId);
+                        if (game) {
+                            game.title = title;
+                            game.desc = desc;
+                            game.fileLink = fileLink;
+                            if (imageData) game.imageData = imageData;
+                        }
+                        showNotification("Игра успешно обновлена!");
+                    } else {
+                        if (!imageData) {
+                            showNotification("Необходимо выбрать обложку для новой игры!", true);
+                            gameForm.saveBtn.disabled = false;
+                            gameForm.saveBtn.textContent = 'Сохранить игру';
+                            return;
+                        }
+                        const newGame = { id: Date.now(), title, desc, imageData, fileLink };
+                        state.games.push(newGame);
+                        showNotification("Игра успешно добавлена!");
+                    }
+                    
+                    saveData();
+                    renderAll();
+                    resetGameForm();
+                } catch (error) {
+                    console.error("File read error:", error);
+                    showNotification("Ошибка при чтении файла изображения.", true);
+                } finally {
+                    gameForm.saveBtn.disabled = false;
+                    gameForm.saveBtn.textContent = state.editingGameId ? 'Обновить игру' : 'Сохранить игру';
+                }
+            }
+            
+            function resetGameForm() {
+                gameForm.id.value = '';
+                gameForm.title.value = '';
+                gameForm.desc.value = '';
+                gameForm.imageInput.value = null;
+                gameForm.fileLinkInput.value = '';
+                gameForm.imagePreview.style.display = 'none';
+                gameForm.imagePreview.src = '';
+                gameForm.saveBtn.textContent = 'Сохранить игру';
+                gameForm.cancelBtn.style.display = 'none';
+                state.editingGameId = null;
+            }
+            
+            window.editGame = (id) => {
+                const game = state.games.find(g => g.id === id);
+                if (game) {
+                    state.editingGameId = id;
+                    gameForm.id.value = game.id;
+                    gameForm.title.value = game.title;
+                    gameForm.desc.value = game.desc;
+                    gameForm.fileLinkInput.value = game.fileLink || '';
+                    
+                    gameForm.imagePreview.src = game.imageData || '';
+                    gameForm.imagePreview.style.display = game.imageData ? 'block' : 'none';
+
+                    gameForm.saveBtn.textContent = 'Обновить игру';
+                    gameForm.cancelBtn.style.display = 'inline-block';
+                    gameForm.title.focus();
+                }
+            }
+
+            window.cancelEdit = () => resetGameForm();
+            
+            window.deleteGame = (id) => {
+                if (confirm('Вы уверены, что хотите удалить эту игру?')) {
+                    state.games = state.games.filter(g => g.id !== id);
+                    saveData();
+                    renderAll();
+                    showNotification("Игра удалена.");
+                }
+            };
+            window.updateEarnings = () => {
+                state.earnings.total = parseFloat(document.getElementById('earningsTotal').value);
+                state.earnings.history.push(+(10 + Math.random() * 40).toFixed(2));
+                if (state.earnings.history.length > 10) {
+                    state.earnings.history.shift();
+                }
+                saveData();
+                renderEarnings();
+                showNotification("Данные о заработке обновлены!");
+            };
+            
+            loadData();
+            renderAll();
+        });
+    </script>
+</body>
+</html>
